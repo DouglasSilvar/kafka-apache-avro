@@ -8,11 +8,20 @@ import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Deserializer;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+
 
 public class AvroDeserializer<T extends GenericRecord> implements Deserializer<T> {
-    private final Class<T> targetType;
+    private Class<T> targetType;
+
+    public AvroDeserializer() {
+    }
 
     public AvroDeserializer(Class<T> targetType) {
+        this.targetType = targetType;
+    }
+
+    public void setTargetType(Class<T> targetType) {
         this.targetType = targetType;
     }
 
@@ -21,16 +30,19 @@ public class AvroDeserializer<T extends GenericRecord> implements Deserializer<T
         if (data == null || data.length == 0) {
             return null;
         }
+        if (targetType == null) {
+            throw new IllegalStateException("Target type não foi definido para desserialização Avro.");
+        }
 
         T result = null;
-        try {
-            ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data);
-            BinaryDecoder binaryDecoder =
-                    DecoderFactory.get().binaryDecoder(byteArrayInputStream, null);
+        try (ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(data)) {
+            BinaryDecoder binaryDecoder = DecoderFactory.get().binaryDecoder(byteArrayInputStream, null);
             SpecificDatumReader<T> datumReader = new SpecificDatumReader<>(targetType.newInstance().getSchema());
             result = datumReader.read(null, binaryDecoder);
-        } catch (Exception e) {
-            throw new SerializationException("Can't deserialize data for topic='" + topic + "'", e);
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new SerializationException("Erro ao instanciar o tipo alvo para desserialização Avro", e);
+        } catch (IOException e) {
+            throw new SerializationException("Não foi possível desserializar os dados para o tópico '" + topic + "'", e);
         }
         return result;
     }

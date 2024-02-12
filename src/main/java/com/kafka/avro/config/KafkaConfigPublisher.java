@@ -33,5 +33,6 @@ public class KafkaConfigPublisher {
     public KafkaTemplate<String, Pessoa> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
+
 }
 

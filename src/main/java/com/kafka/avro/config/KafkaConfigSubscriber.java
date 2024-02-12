@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.listener.ContainerProperties;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,22 +20,35 @@ public class KafkaConfigSubscriber {
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
-    public DefaultKafkaConsumerFactory<String, Pessoa> consumerFactory() {
-        Map<String, Object> configProps = new HashMap<>();
-        configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, AvroDeserializer.class);
-        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, "kafavro_group_id");
-
-        return new DefaultKafkaConsumerFactory<>(configProps);
+    @Bean
+    public AvroDeserializer<Pessoa> pessoaAvroDeserializer() {
+        return new AvroDeserializer<>(Pessoa.class);
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Pessoa> kafkaListenerContainerFactory() {
+    public DefaultKafkaConsumerFactory<String, Pessoa> consumerFactory(AvroDeserializer<Pessoa> pessoaAvroDeserializer) {
+        Map<String, Object> configProps = new HashMap<>();
+        configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, "kafavro_group");
+        // Observe que não estamos mais definindo o deserializador de valor aqui
+
+        return new DefaultKafkaConsumerFactory<>(
+                configProps,
+                new StringDeserializer(), // Usando StringDeserializer para a chave
+                pessoaAvroDeserializer // Passando o AvroDeserializer para o valor
+        );
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, Pessoa> kafkaListenerContainerFactory(
+            DefaultKafkaConsumerFactory<String, Pessoa> consumerFactory
+    ) {
         ConcurrentKafkaListenerContainerFactory<String, Pessoa> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
-        factory.setConsumerFactory(consumerFactory());
+        factory.setConsumerFactory(consumerFactory);
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
         return factory;
     }
 }
+
 
