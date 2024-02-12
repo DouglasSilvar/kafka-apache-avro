@@ -1,0 +1,58 @@
+{
+  "type": "record",
+  "namespace": "com.kafka.avro.model",
+  "name": "Pessoa",
+  "doc": "Esquema Avro para cadastro de pessoas.",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string",
+      "doc": "Identificador único da pessoa."
+    },
+    {
+      "name": "nome",
+      "type": "string",
+      "doc": "Nome da pessoa."
+    },
+    {
+      "name": "idade",
+      "type": "int",
+      "doc": "Idade da pessoa."
+    },
+    {
+      "name": "telefone",
+      "type": "string",
+      "doc": "Número de telefone da pessoa."
+    },
+    {
+      "name": "email",
+      "type": "string",
+      "doc": "Endereço de e-mail da pessoa."
+    },
+    {
+      "name": "endereco",
+      "type": "string",
+      "doc": "Endereço residencial da pessoa."
+    },
+    {
+      "name": "cidade",
+      "type": "string",
+      "doc": "Cidade da residência da pessoa."
+    },
+    {
+      "name": "estado",
+      "type": "string",
+      "doc": "Estado da residência da pessoa."
+    },
+    {
+      "name": "cep",
+      "type": "string",
+      "doc": "CEP da residência da pessoa."
+    },
+    {
+      "name": "pais",
+      "type": "string",
+      "doc": "País da residência da pessoa."
+    }
+  ]
+}
